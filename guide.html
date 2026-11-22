@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>vibcoding 使用指南</title>
+<style>
+  :root{color-scheme:light;--paper:#faf8f4;--ink:#202822;--green:#143e2b;--muted:#505e54;--line:#d1d7ce;--soft:#e3ece0}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.75 "Microsoft YaHei UI","PingFang SC","Noto Sans CJK SC",sans-serif}
+  a{color:var(--green);text-underline-offset:4px}
+  :focus-visible{outline:2px solid #31714b;outline-offset:4px}
+  header{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:13px clamp(18px,3vw,44px);border-bottom:1px solid var(--line)}
+  header strong{font:700 25px/1 Arial,sans-serif;color:var(--green)}
+  header span{margin-left:8px}
+  .layout{display:grid;grid-template-columns:clamp(198px,20.4vw,303px) minmax(0,1fr);max-width:1600px;margin:auto}
+  aside{border-right:1px solid var(--line);padding:32px 18px}
+  nav{position:sticky;top:24px}
+  nav a{display:block;text-decoration:none;padding:7px 13px;border-radius:6px}
+  nav a:hover,nav a:focus-visible{background:var(--soft)}
+  nav a[aria-current]{background:var(--soft);font-weight:700}
+  main{padding:40px clamp(26px,3.2vw,50px) 68px;min-width:0}
+  h1,h2,h3{color:var(--green);line-height:1.25;margin:0 0 .55em}
+  h1{font-size:clamp(34px,4.25vw,64px);letter-spacing:-.035em;margin-top:14px}
+  h2{font-size:clamp(24px,2.3vw,34px)}
+  h3{font-size:20px}
+  p{margin:0 0 14px}
+  .label{display:inline-block;padding:2px 13px;background:var(--soft);border-radius:6px;color:var(--green);font-weight:700}
+  .intro{font-size:clamp(16px,1.4vw,20px);max-width:55em}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,2.4vw,36px);margin:32px 0}
+  .choice{display:block;border:1px solid #648473;border-radius:10px;padding:20px clamp(15px,2.4vw,34px);text-decoration:none}
+  .choice:hover{background:#eff4eb}
+  .choice h2{font-size:clamp(22px,2.4vw,35px)}
+  .choice p{color:var(--ink)}
+  section{border-top:1px solid var(--line);padding:28px 0;margin-top:12px;scroll-margin-top:16px}
+  .flow{counter-reset:steps;list-style:none;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin:18px 0 0}
+  .flow li{counter-increment:steps}
+  .flow li::before{content:counter(steps);display:grid;place-items:center;background:var(--green);color:white;width:38px;height:38px;border-radius:50%;font-weight:bold;margin-bottom:12px}
+  .flow strong{display:block;color:var(--green)}
+  ol.steps{padding-left:1.55em;margin:0 0 20px}
+  .steps li{padding-left:4px;margin:9px 0}
+  .prompt{border:1px solid var(--line);border-radius:8px;background:#f0f3ed;margin:12px 0 16px}
+  .prompt-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 13px;border-bottom:1px solid var(--line);font-size:14px;color:var(--muted)}
+  button{cursor:pointer;font:inherit;padding:5px 12px;background:var(--paper);color:var(--green);border:1px solid #829587;border-radius:5px;flex:none;white-space:nowrap}
+  button:hover{background:var(--soft)}
+  pre{font:inherit;white-space:pre-wrap;overflow-wrap:anywhere;margin:0;padding:13px 16px}
+  code{font-family:Consolas,monospace;font-size:.95em;overflow-wrap:anywhere}
+  .risk{display:grid;grid-template-columns:minmax(80px,.2fr) minmax(0,1fr) minmax(0,1fr);gap:14px;border-top:1px solid var(--line);padding:13px 0;align-items:start}
+  .risk b{color:var(--green)}
+  .risk .yellow{color:#795000}.risk .red{color:#942e2e}
+  details{border-top:1px solid var(--line);padding:10px 0}
+  summary{cursor:pointer;font-weight:700;color:var(--green);padding:5px 0}
+  .refs{font-size:.92rem;color:var(--muted)}
+  footer{border-top:1px solid var(--line);padding-top:19px;display:flex;flex-wrap:wrap;gap:8px 20px}
+  @media(max-width:760px){
+    .layout{display:block} aside{border:0;border-bottom:1px solid var(--line);padding:8px 12px}
+    nav{position:static;display:flex;flex-wrap:wrap} nav a{padding:5px 8px}
+    main{padding:28px 18px 40px}
+  }
+  @media(max-width:460px){.choices,.flow{grid-template-columns:1fr}.choices{margin:20px 0}.flow{gap:14px}.flow li{display:grid;grid-template-columns:38px 1fr;gap:10px}.flow li::before{margin:0}.risk{grid-template-columns:64px minmax(0,1fr);gap:4px 10px}.risk span:last-child{grid-column:2}}
+</style>
+<header id="top">
+  <div><strong>vibcoding</strong><span>/ 使用指南</span></div>
+  <a href="README.md">规范库说明 ↗</a>
+</header>
+<div class="layout">
+<aside><nav aria-label="页面目录">
+  <a href="#intro" aria-current="location">怎么用这套规范</a>
+  <a href="#flow">主要流程</a>
+  <a href="#new">新项目</a>
+  <a href="#existing">已有项目</a>
+  <a href="#risk">怎么分绿黄红</a>
+  <a href="#daily">常用操作</a>
+</nav></aside>
+<main>
+  <div id="intro">
+    <span class="label">AI 开发协作</span>
+    <h1>让 AI 按项目规矩干活</h1>
+    <p class="intro">vibcoding 是一套写给人和 AI 的协作约定。把项目怎么跑、怎么测、哪些地方要先问写进 <code>AGENTS.md</code>，以后开新对话就能沿用这些约定。</p>
+    <div class="choices">
+      <a class="choice" href="#new"><h2>新项目</h2><p>手上只有想法，或刚建好仓库。先把项目跑起来，再用一个小任务试流程。</p><strong>从零开始 →</strong></a>
+      <a class="choice" href="#existing"><h2>已有项目</h2><p>代码已经写了一阵子。让 AI 先查现状，把已有命令和团队规矩整理出来。</p><strong>接手现有代码 →</strong></a>
+    </div>
+  </div>
+  <section id="flow">
+    <h2>一次任务怎么走</h2>
+    <ol class="flow">
+      <li><div><strong>先看现状</strong>读项目约定，找入口，弄清你要看到什么结果。</div></li>
+      <li><div><strong>看风险再动手</strong>简单的直接做，影响大的先讲方案，等确认。</div></li>
+      <li><div><strong>验一遍再交付</strong>跑项目的验证命令，或按适用的手工步骤检查，告诉你实际结果。</div></li>
+    </ol>
+  </section>
+  <section id="new">
+    <h2>新项目怎么开始</h2>
+    <ol class="steps">
+      <li>把 <a href="templates/AGENTS.md">项目模板</a>复制到项目根目录，文件名用 <code>AGENTS.md</code>。先写现在已经确定的干活规矩，比如改动前先看什么、哪些操作要先问。</li>
+      <li>项目能跑起来后，再补启动办法、验证命令和目录职责。产品方向可以边做边调整，每次开工时直接告诉 AI 这次想做什么。</li>
+      <li>挑一个小任务试跑，比如改页面文案。看看 AI 能否自己找到文件，改完说清怎么验的。</li>
+    </ol>
+    <div class="prompt"><div class="prompt-head"><span>发给 AI</span><button type="button">复制话术</button></div><pre>这是一个刚开始的项目。请按 vibcoding 的项目模板，在根目录起草一份简短的 AGENTS.md，写清改动前先看什么、改完怎么验证、哪些操作要先问我。只写目前已确定的约定，暂时没有的命令等项目跑起来再补。</pre></div>
+  </section>
+  <section id="existing">
+    <h2>接手已有项目怎么做</h2>
+    <ol class="steps">
+      <li>先让 AI 盘点。看看项目用什么、从哪启动、CI 怎么验、哪里有迁移或发布配置。让它把结论和出处写进 <code>docs/PROJECT-STATE.md</code>。</li>
+      <li>你重点核对三件事：<strong>哪些命令真能跑、哪里有风险、哪些目录不能手改。</strong> 已有的 <code>AGENTS.md</code> 先读一遍，有冲突就列出来。</li>
+      <li>把确认过的约定补进项目的 <code>AGENTS.md</code>。继续沿用团队的 PR、CI 和发布方式，然后挑一个小修验证接入效果。</li>
+    </ol>
+    <div class="prompt"><div class="prompt-head"><span>发给 AI · 把【规范库路径】换成本地位置</span><button type="button">复制话术</button></div><pre>按【规范库路径】/prompts/PROJECT-SCAN.md 盘点当前项目，只生成 docs/PROJECT-STATE.md。先不改代码、不装依赖、不跑构建或测试。把没有验证的命令、风险目录候选和文档冲突单独列出来。</pre></div>
+    <p class="refs"><a href="project-setup/GUIDE.md">完整接入指南</a> · <a href="prompts/PROJECT-SCAN.md">项目扫描提示词原文</a></p>
+  </section>
+  <section id="risk">
+    <h2>怎么分绿灯、黄灯、红灯</h2>
+    <p>看改坏了会影响谁、能不能恢复。碰到多个条件时，按最高一级处理。一行权限判断也可能是红灯。</p>
+    <div class="risk"><b>绿灯</b><span>改文案、注释、局部小修。</span><span>确认范围，直接改，做相关验证。</span></div>
+    <div class="risk"><b class="yellow">黄灯</b><span>加依赖、改多个模块的行为。</span><span>先讲改哪、怎么验、有什么取舍，你同意后再做。</span></div>
+    <div class="risk"><b class="red">红灯</b><span>改权限、支付、公开接口、迁移数据或动生产。</span><span>先讲影响、验证和回滚，关键操作逐项确认。</span></div>
+    <p>同意方案只代表可以按范围实施。合并主干、部署、执行迁移、删除数据仍需要对应授权。</p>
+    <p class="refs"><a href="coding/WORKFLOW.md">完整分级和权限规则</a></p>
+  </section>
+  <section id="daily">
+    <h2>日常怎么跟 AI 说</h2>
+    <details open><summary>提一个功能</summary>
+      <div class="prompt"><div class="prompt-head"><span>发给 AI</span><button type="button">复制话术</button></div><pre>我想让【谁】在【场景】能做到【结果】。先读项目的 AGENTS.md，看现有实现能复用什么。告诉我这次是绿灯、黄灯还是红灯，以及做完怎么验。</pre></div>
+    </details>
+    <details><summary>修一个说不清原因的 Bug</summary>
+      <div class="prompt"><div class="prompt-head"><span>发给 AI</span><button type="button">复制话术</button></div><pre>我做了【操作】，看到【实际结果】，预期是【预期结果】。请先复现并找到原因，再做最小修复，用原来的步骤验证一次。</pre></div>
+    </details>
+    <details><summary>检查 AI 写完的改动</summary>
+      <div class="prompt"><div class="prompt-head"><span>发给 AI</span><button type="button">复制话术</button></div><pre>请审查当前改动。先确认需求有没有真正跑通，再看会不会影响原来的用法。按严重程度列问题，写出文件位置、触发条件和已经跑过的检查。</pre></div>
+    </details>
+    <details><summary>回来续做，或换人接手</summary>
+      <div class="prompt"><div class="prompt-head"><span>发给 AI</span><button type="button">复制话术</button></div><pre>请先读项目的 AGENTS.md 和交接文档，再对照当前分支、工作区和验证结果。告诉我现在做到哪、下一步是什么、哪件事还需要我确认。</pre></div>
+      <p class="refs"><a href="templates/docs/HANDOVER.md">交接模板</a></p>
+    </details>
+    <p class="refs">想把摸底、写方案、审查交给专门工具时，可以按需启用 <a href="skills/README.md">Skill</a>。</p>
+  </section>
+  <footer><a href="#top">返回顶部 ↑</a><a href="coding/PRINCIPLES.md">编码原则</a><a href="coding/RESEARCH.md">技术选型怎么查证</a></footer>
+</main>
+</div>
+<div id="copy-status" role="status" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)"></div>
+<script>
+  const chapterLinks = [...document.querySelectorAll('nav a')];
+  function updateChapter() {
+    const current = chapterLinks.find(link => link.hash === location.hash) ?? chapterLinks[0];
+    for (const link of chapterLinks) {
+      if (link === current) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    }
+  }
+  window.addEventListener('hashchange', updateChapter);
+  updateChapter();
+
+  const status = document.querySelector('#copy-status');
+  for (const button of document.querySelectorAll('.prompt button')) {
+    let reset;
+    button.addEventListener('click', async () => {
+      const prompt = button.closest('.prompt').querySelector('pre');
+      try {
+        await navigator.clipboard.writeText(prompt.textContent);
+        button.textContent = '已复制';
+        status.textContent = '话术已复制';
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(prompt);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        button.textContent = '请手动复制';
+        status.textContent = '已选中话术，请手动复制';
+      }
+      clearTimeout(reset);
+      reset = setTimeout(() => { button.textContent = '复制话术'; }, 2400);
+    });
+  }
+</script>
+</html>

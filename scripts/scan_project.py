@@ -134,8 +134,8 @@ def collect(root: Path, max_scan_files: int):
                 risk_dirs.append(rel_dir.as_posix())
             if name in {"generated", "gen", "__generated__", "dist", "build", "out"}:
                 generated_dirs.append(rel_dir.as_posix())
-            if name in TEST_DIR_NAMES:
-                tests += sum(1 for f in filenames if Path(f).suffix in TEXT_EXT)
+            if any(part.lower() in TEST_DIR_NAMES for part in parts):
+                tests += sum(1 for f in filenames if Path(f).suffix.lower() in TEXT_EXT)
 
         for filename in filenames:
             path = Path(dirpath) / filename

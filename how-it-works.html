@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>vibcoding 的规矩怎么起作用</title>
+<style>
+  :root { color-scheme:light; --paper:#faf8f4; --ink:#202822; --green:#143e2b; --muted:#505e54; --line:#d1d7ce; --soft:#e3ece0; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.7 "Microsoft YaHei UI","PingFang SC","Noto Sans CJK SC",sans-serif; }
+  a { color:var(--green); text-underline-offset:4px; }
+  :focus-visible { outline:2px solid #31714b; outline-offset:4px; }
+  header { border-bottom:1px solid var(--line); }
+  header div { display:flex; justify-content:space-between; align-items:center; gap:16px; max-width:1320px; margin:auto; padding:13px clamp(18px,4vw,42px); }
+  header strong { color:var(--green); font:700 24px/1 Arial,sans-serif; }
+  main { max-width:1320px; margin:auto; padding:clamp(28px,5vw,68px) clamp(18px,4vw,42px); }
+  h1,h2,h3 { color:var(--green); line-height:1.25; margin:0 0 .55em; }
+  h1 { font-size:clamp(34px,5vw,66px); letter-spacing:-.035em; }
+  h2 { font-size:clamp(25px,3vw,37px); }
+  h3 { font-size:21px; }
+  p { margin:0 0 12px; }
+  .lead { font-size:clamp(17px,1.7vw,22px); max-width:48em; }
+  .hero { margin-bottom:34px; }
+  .documents { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+  .document { background:#fffdfa; border:1px solid var(--line); border-top:3px solid #72917e; border-radius:7px; padding:18px 20px; }
+  .document p { margin:0; }
+  code { font: .92em/1.45 Consolas,monospace; overflow-wrap:anywhere; }
+  .file { display:block; color:var(--muted); margin:0 0 9px; }
+  .note { margin:15px 0 0; color:var(--muted); }
+  .demo { margin-top:38px; border-top:1px solid var(--line); padding-top:28px; }
+  .workbench { display:grid; grid-template-columns:minmax(205px, .33fr) minmax(0, 1fr); gap:22px; align-items:start; margin-top:16px; }
+  .scenarios { display:grid; gap:8px; }
+  button { font:inherit; color:inherit; }
+  .scenarios button { background:transparent; border:1px solid var(--line); border-radius:7px; text-align:left; padding:10px 12px; cursor:pointer; }
+  .scenarios button:hover,.scenarios button[aria-pressed="true"] { background:var(--soft); border-color:#829587; }
+  .scenarios strong,.scenarios span { display:block; }
+  .scenarios span { color:var(--muted); font-size:14px; }
+  .chat { min-width:0; background:#fffdfa; border:1px solid var(--line); border-radius:10px; }
+  .chat-head { display:flex; justify-content:space-between; gap:10px; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line); }
+  .chat-head h3 { margin:0; font-size:17px; }
+  .risk { color:#154c32; background:#e4efe4; border-radius:4px; padding:2px 8px; font-size:14px; white-space:nowrap; }
+  .risk.yellow { color:#754a09; background:#fcf0d8; }
+  .risk.red { color:#842c2a; background:#f8e5e3; }
+  .messages { display:grid; gap:12px; padding:16px; }
+  .message { max-width:88%; }
+  .message.you { justify-self:end; }
+  .speaker { color:var(--muted); font-size:13px; display:block; margin-bottom:3px; }
+  .you .speaker { text-align:right; }
+  .bubble { margin:0; background:#efeee9; padding:9px 12px; border-radius:7px; overflow-wrap:anywhere; }
+  .you .bubble { background:var(--soft); }
+  .chat-foot { border-top:1px solid var(--line); padding:11px 16px; font-size:14px; color:var(--muted); margin:0; }
+  footer { display:flex; flex-wrap:wrap; gap:8px 20px; padding-top:26px; }
+  @media(max-width:720px) {
+    .documents,.workbench { grid-template-columns:1fr; }
+    .scenarios { grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+    .scenarios button { padding:7px; }
+    .scenarios span { font-size:12px; }
+    .message { max-width:94%; }
+  }
+  @media(max-width:370px) { header div { gap:8px; } .chat-head { flex-wrap:wrap; } }
+</style>
+</head>
+<body>
+<header><div><strong>vibcoding</strong><a href="guide.html">去看使用指南 →</a></div></header>
+<main>
+  <div class="hero">
+    <h1>这套规矩怎么起作用？</h1>
+    <p class="lead">把 AI 想成刚坐到工位的新同事。你在对话里交代今天的活，它看工位上的三份资料，弄清要去哪找、照什么做、项目现在是什么样。</p>
+  </div>
+  <section class="documents" aria-label="工位上的三份资料">
+    <article class="document">
+      <h3>工位上的便签</h3>
+      <a class="file" href="templates/AGENTS.md"><code>AGENTS.md</code></a>
+      <p>告诉 AI 先看哪份文件、哪些目录要小心、什么操作要先问。讨论中的产品想法可以随时变，便签跟着协作约定更新。</p>
+    </article>
+    <article class="document">
+      <h3>共用的操作手册</h3>
+      <a class="file" href="coding/WORKFLOW.md"><code>coding/</code></a>
+      <p>按任务翻到相关一页。比如工作流那一页讲怎么判断风险、什么时候等确认、做完怎么验。各项目可以共用同一份手册。</p>
+    </article>
+    <article class="document">
+      <h3>项目的现状记录</h3>
+      <a class="file" href="templates/docs/PROJECT-STATE.md"><code>docs/PROJECT-STATE.md</code></a>
+      <p>记项目怎么跑、代码在哪、有哪些已知问题。接手旧项目时扫一遍就有底，过时了可以重扫，重要判断再查代码和 CI。</p>
+    </article>
+  </section>
+  <p class="note">接入时，把便签放到项目根目录，再写清共用手册的位置，AI 才能顺着路径找到它。</p>
+
+  <section class="demo">
+    <h2>同一句“帮我改一下”，接下来会怎样？</h2>
+    <p>切换场景，看看 AI 怎么回，以及你在哪一步需要点头。</p>
+    <div class="workbench">
+      <div class="scenarios" role="group" aria-label="切换演示场景">
+        <button type="button" data-scene="wording" aria-pressed="true"><strong>改文案</strong><span>绿灯 · 直接做</span></button>
+        <button type="button" data-scene="export" aria-pressed="false"><strong>加导出</strong><span>黄灯 · 先聊方案</span></button>
+        <button type="button" data-scene="migration" aria-pressed="false"><strong>迁移数据</strong><span>红灯 · 分步确认</span></button>
+      </div>
+      <div class="chat" aria-live="polite">
+        <div class="chat-head"><h3>对话演示</h3><span class="risk" id="risk">绿灯 · 可直接改</span></div>
+        <div class="messages" id="messages">
+          <div class="message you"><span class="speaker">你</span><p class="bubble">把首页按钮的“立即开始”改成“创建项目”。</p></div>
+          <div class="message"><span class="speaker">AI</span><p class="bubble">改好了。我在本地打开首页，确认按钮显示“创建项目”。</p></div>
+        </div>
+        <p class="chat-foot" id="reason">只改文案，直接改完做一次相关验证。</p>
+      </div>
+    </div>
+  </section>
+  <footer><a href="guide.html">新项目和已有项目怎么接入</a><a href="AGENTS.md">规范库入口</a><a href="coding/WORKFLOW.md">风险分级原文</a></footer>
+</main>
+<script>
+  const scenes = {
+    wording: {
+      risk: '绿灯 · 可直接改', color: '',
+      reason: '只改文案，直接改完做一次相关验证。',
+      messages: [['你', '把首页按钮的“立即开始”改成“创建项目”。'], ['AI', '改好了。我在本地打开首页，确认按钮显示“创建项目”。']]
+    },
+    export: {
+      risk: '黄灯 · 等方案确认', color: 'yellow',
+      reason: '功能涉及列表和导出两个模块，先对齐范围和验证方式。',
+      messages: [['你', '给项目列表加个 CSV 导出。'], ['AI', '我会在列表加导出入口，复用现有查询，只导出筛选后的结果。用空列表和有数据的列表各测一次。按这个范围做可以吗？'], ['你', '可以，就按筛选结果导。']]
+    },
+    migration: {
+      risk: '红灯 · 关键操作单独确认', color: 'red',
+      reason: '批准准备方案后，可以按范围做准备。执行生产迁移是一次单独的决定。',
+      messages: [['你', '把历史订单迁到新表。'], ['AI', '我先写迁移和回退步骤，在测试环境核对迁移前后的条数和金额。你确认方案后，我先准备和演练。'], ['你', '先演练。'], ['AI', '演练通过，回退也试过了。请单独确认是否现在执行生产迁移。']]
+    }
+  };
+  const buttons = [...document.querySelectorAll('[data-scene]')];
+  const risk = document.querySelector('#risk');
+  const messages = document.querySelector('#messages');
+  const reason = document.querySelector('#reason');
+
+  function makeMessage([speaker, text]) {
+    const message = document.createElement('div');
+    message.className = speaker === '你' ? 'message you' : 'message';
+    const name = document.createElement('span');
+    name.className = 'speaker';
+    name.textContent = speaker;
+    const bubble = document.createElement('p');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+    message.append(name, bubble);
+    return message;
+  }
+
+  for (const button of buttons) {
+    button.addEventListener('click', () => {
+      const scene = scenes[button.dataset.scene];
+      for (const option of buttons) option.setAttribute('aria-pressed', String(option === button));
+      risk.className = ['risk', scene.color].filter(Boolean).join(' ');
+      risk.textContent = scene.risk;
+      messages.replaceChildren(...scene.messages.map(makeMessage));
+      reason.textContent = scene.reason;
+    });
+  }
+</script>
+</body>
+</html>
