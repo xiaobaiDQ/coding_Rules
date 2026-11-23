@@ -50,6 +50,25 @@ TEXT_EXT = {
 
 TEST_DIR_NAMES = {"test", "tests", "__tests__", "spec", "specs", "e2e", "integration_tests"}
 
+MANIFEST_PATTERNS = {
+    "pyproject.toml": r"^\s*name\s*=",
+    "Cargo.toml": r"^\s*name\s*=",
+    "go.mod": r"^module\s+",
+    "composer.json": r'"name"',
+    "pom.xml": r"<artifactId>",
+    "Gemfile": r"^ruby\s",
+}
+
+MANIFEST_NAMES = {
+    "requirements.txt", "requirements-dev.txt", "Makefile", "justfile", "Dockerfile",
+    "docker-compose.yml", "docker-compose.yaml", ".python-version", ".nvmrc", ".tool-versions",
+    "package.json", *MANIFEST_PATTERNS,
+}
+LOCKFILES = {
+    "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb", "poetry.lock",
+    "Pipfile.lock", "uv.lock", "Cargo.lock", "go.sum", "composer.lock", "Gemfile.lock",
+}
+
 TEST_CONFIGS = [
     "pytest.ini", "tox.ini", "setup.cfg", "jest.config.js", "jest.config.ts",
     "jest.config.mjs", "vitest.config.ts", "vitest.config.js", "playwright.config.ts",
@@ -113,6 +132,8 @@ def collect(root: Path, max_scan_files: int):
     generated_dirs = []
     large_files = []
     docs = []
+    manifests = []
+    lockfiles = []
     tests = 0
     todo_counts = {}
     skip_hits = []
@@ -139,6 +160,10 @@ def collect(root: Path, max_scan_files: int):
 
         for filename in filenames:
             path = Path(dirpath) / filename
+            if filename in MANIFEST_NAMES:
+                manifests.append(rel_dir / filename)
+            elif filename in LOCKFILES:
+                lockfiles.append((rel_dir / filename).as_posix())
             total_files += 1
             if parts:
                 top_dirs[parts[0]] = top_dirs.get(parts[0], 0) + 1
@@ -173,6 +198,8 @@ def collect(root: Path, max_scan_files: int):
 
     large_files.sort(key=lambda item: item[1], reverse=True)
     return {
+        "manifests": sorted(manifests, key=lambda path: (len(path.parts), path.as_posix())),
+        "lockfiles": sorted(lockfiles),
         "total_files": total_files,
         "ext_counts": ext_counts,
         "lang_counts": lang_counts,
@@ -217,39 +244,31 @@ def grep_first(path: Path, pattern: str, limit: int = 40):
     return None
 
 
-def manifest_section(root: Path):
+def manifest_section(root: Path, manifests):
     lines = []
-    package_json = root / "package.json"
-    if package_json.exists():
-        data = read_json(package_json)
-        if isinstance(data, dict):
-            lines.append("- `package.json`：name=`%s`" % data.get("name", "未写"))
-            scripts = data.get("scripts") or {}
-            if isinstance(scripts, dict) and scripts:
-                lines.append("  - scripts: " + ", ".join("`%s`" % k for k in sorted(scripts)))
-            deps = data.get("dependencies") or {}
-            dev = data.get("devDependencies") or {}
-            lines.append("  - 依赖：%d 个运行时，%d 个开发依赖" % (len(deps), len(dev)))
-            if data.get("packageManager"):
-                lines.append("  - packageManager: `%s`" % data["packageManager"])
-
-    checks = [
-        ("pyproject.toml", r"^\s*name\s*="),
-        ("Cargo.toml", r"^\s*name\s*="),
-        ("go.mod", r"^module\s+"),
-        ("composer.json", r'"name"'),
-        ("pom.xml", r"<artifactId>"),
-        ("Gemfile", r"^ruby\s"),
-    ]
-    for name, pattern in checks:
-        path = root / name
-        if path.exists():
-            found = grep_first(path, pattern)
-            lines.append("- `%s`%s" % (name, "：" + found if found else ""))
-
-    for name in ("requirements.txt", "requirements-dev.txt", "Makefile", "justfile", "Dockerfile", "docker-compose.yml", "docker-compose.yaml", ".python-version", ".nvmrc", ".tool-versions"):
-        path = root / name
-        if path.exists():
+    for relative in manifests:
+        path = root / relative
+        name = path.name
+        label = relative.as_posix()
+        if name == "package.json":
+            data = read_json(path)
+            if isinstance(data, dict):
+                lines.append("- `%s`：name=`%s`" % (label, data.get("name", "未写")))
+                scripts = data.get("scripts") or {}
+                if isinstance(scripts, dict) and scripts:
+                    lines.append("  - scripts: " + ", ".join("`%s`" % k for k in sorted(scripts)))
+                deps = data.get("dependencies") or {}
+                dev = data.get("devDependencies") or {}
+                if isinstance(deps, dict) and isinstance(dev, dict):
+                    lines.append("  - 依赖：%d 个运行时，%d 个开发依赖" % (len(deps), len(dev)))
+                if data.get("packageManager"):
+                    lines.append("  - packageManager: `%s`" % data["packageManager"])
+            else:
+                lines.append("- `%s`（无法解析）" % label)
+        elif name in MANIFEST_PATTERNS:
+            found = grep_first(path, MANIFEST_PATTERNS[name])
+            lines.append("- `%s`%s" % (label, "：" + found if found else ""))
+        else:
             extra = ""
             if name.startswith("requirements"):
                 try:
@@ -264,7 +283,7 @@ def manifest_section(root: Path):
                         extra = "：targets " + ", ".join(sorted(set(targets))[:20])
                 except OSError:
                     pass
-            lines.append("- `%s`%s" % (name, extra))
+            lines.append("- `%s`%s" % (label, extra))
 
     return lines or ["未找到可识别的清单文件。"]
 
@@ -280,13 +299,12 @@ def ci_section(root: Path):
     return found or ["未找到 CI 配置。"]
 
 
-def tool_section(root: Path):
+def tool_section(root: Path, lockfiles):
     lines = []
     tests = [name for name in TEST_CONFIGS if (root / name).exists()]
     lint = [name for name in LINT_CONFIGS if (root / name).exists()]
     lines.append("- 测试配置：" + (", ".join("`%s`" % t for t in tests) if tests else "未找到"))
     lines.append("- 质量工具配置：" + (", ".join("`%s`" % t for t in lint) if lint else "未找到"))
-    lockfiles = [n for n in ("package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb", "poetry.lock", "Pipfile.lock", "uv.lock", "Cargo.lock", "go.sum", "composer.lock", "Gemfile.lock") if (root / n).exists()]
     lines.append("- 锁文件：" + (", ".join("`%s`" % l for l in lockfiles) if lockfiles else "未找到"))
     return lines
 
@@ -361,7 +379,7 @@ def build_report(root: Path, data, args):
 
     lines.append("## 3. 清单与入口")
     lines.append("")
-    lines.extend(manifest_section(root))
+    lines.extend(manifest_section(root, data["manifests"]))
     lines.append("")
 
     lines.append("## 4. CI")
@@ -371,7 +389,7 @@ def build_report(root: Path, data, args):
 
     lines.append("## 5. 测试与质量工具")
     lines.append("")
-    lines.extend(tool_section(root))
+    lines.extend(tool_section(root, data["lockfiles"]))
     lines.append("- 测试目录内文本文件数：%d" % data["test_file_count"])
     lines.append("")
 
